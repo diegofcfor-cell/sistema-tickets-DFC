@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Mail\WelcomeUserMail;
+use App\Mail\NewUserNotificationMail;
+
+class RegisterController extends Controller
+{
+    public function create()
+    {
+        return view('auth.register');
+    }
+
+    public function store(Request $request)
+    {
+        // 1. Validaciones
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'email.unique' => 'Este correo electrónico ya se encuentra registrado.',
+            'password.confirmed' => 'Las contraseñas ingresadas no coinciden.',
+        ]);
+
+	// ... dentro de store() ...
+	Mail::to('d1e6of4@gmail.com')->send(new NewUserNotificationMail($user)); 	
+
+	// 2. Crear el usuario en la BD
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        // 3a. Enviar correo de bienvenida AL USUARIO REGISTRADO
+        Mail::to($user->email)->send(new WelcomeUserMail($validated));
+
+        // 3b. Notificación AL ADMINISTRADOR (Tu correo)
+        Mail::to('d1e6of4@gmail.com')->send(new WelcomeUserMail([
+            'name' => 'Administrador (Nuevo usuario registrado: ' . $user->name . ' - ' . $user->email . ')'
+        ]));
+
+        return back()->with('success', '¡Usuario registrado con éxito! Correo enviado.');
+    }
+}
