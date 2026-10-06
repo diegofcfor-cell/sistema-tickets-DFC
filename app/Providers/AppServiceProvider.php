@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestBrevoMail;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -21,10 +26,17 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
+
     public function boot(): void
     {
-        $this->configureDefaults();
-    }
+        Event::listen(Registered::class, function ($event) {
+            Mail::to($event->user->email)->send(new TestBrevoMail([
+                'nombre' => $event->user->name,
+                'email' => $event->user->email,
+                'mensaje' => '¡Bienvenido al Sistema de Tickets DFC!'
+            ]));
+        });
+    }   
 
     /**
      * Configure default behaviors for production-ready applications.
