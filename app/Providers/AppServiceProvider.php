@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
             Mail::to($event->user->email)->send(new TestBrevoMail([
                 'nombre' => $event->user->name,
                 'email' => $event->user->email,
-                'mensaje' => '¡Bienvenido al Sistema de Tickets DFC!'
+                'mensaje' => 'Bienvenido a mi plataforma de sistema de tickets DFC'
             ]));
         });
     }   
